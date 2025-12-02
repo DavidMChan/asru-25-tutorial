@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASRU 2025 Tutorial | Multimodal Speech Modeling</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0a0a0a;
+            --primary-light: #1a1a1a;
+            --secondary: #222222;
+            --accent: #f59e0b;
+            --accent-light: #fbbf24;
+            --accent-dark: #d97706;
+            --bg-dark: #0a0a0a;
+            --bg-light: #f5f5f5;
+            --text-dark: #1a1a1a;
+            --text-light: #6b7280;
+            --text-white: #ffffff;
+            --card-bg: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.7;
+            color: var(--text-dark);
+            background: var(--bg-light);
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: rgba(10, 10, 10, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            padding: 1rem 0;
+            transition: all 0.3s ease;
+        }
+
+        nav.scrolled {
+            padding: 0.5rem 0;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            color: white;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .nav-logo span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Hero Section - Compact with Content */
+        .hero {
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--primary-light) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 6rem 2rem 4rem;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 10% 90%, rgba(245, 158, 11, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 10%, rgba(245, 158, 11, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        /* Geometric accents */
+        .hero::after {
+            content: '';
+            position: absolute;
+            top: 20%;
+            right: -10%;
+            width: 400px;
+            height: 400px;
+            border: 1px solid rgba(245, 158, 11, 0.1);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .hero-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            letter-spacing: 0.5px;
+        }
+
+        .hero h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.75rem;
+            line-height: 1.2;
+        }
+
+        .hero h2 {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-meta {
+            display: flex;
+            justify-content: center;
+            gap: 2.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+        }
+
+        .hero-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .hero-meta-item svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent);
+        }
+
+        /* Speaker Preview in Hero */
+        .speakers-preview {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-bottom: 3rem;
+            animation: fadeInUp 1s ease-out 0.3s both;
+        }
+
+        .speaker-preview {
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .speaker-preview:hover {
+            transform: translateY(-5px);
+        }
+
+        .speaker-preview img {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent);
+            box-shadow: 0 5px 25px rgba(245, 158, 11, 0.3);
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .speaker-preview:hover img {
+            border-color: var(--accent-light);
+            box-shadow: 0 8px 35px rgba(245, 158, 11, 0.4);
+        }
+
+        .speaker-preview .name {
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .speaker-preview .org {
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Overview in Hero */
+        .hero-overview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            animation: fadeInUp 1s ease-out 0.5s both;
+        }
+
+        .overview-text {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1.05rem;
+            line-height: 1.8;
+        }
+
+        .overview-text p {
+            margin-bottom: 1rem;
+        }
+
+        .overview-text strong {
+            color: var(--accent);
+        }
+
+        .overview-highlights {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .highlight-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            transition: all 0.3s ease;
+        }
+
+        .highlight-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .highlight-card h4 {
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .highlight-card p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Section Styles */
+        section {
+            padding: 5rem 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--accent);
+        }
+
+        .section-header p {
+            color: var(--text-light);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 1.5rem auto 0;
+        }
+
+        /* Schedule Section */
+        #schedule {
+            background: white;
+        }
+
+        .schedule-timeline {
+            position: relative;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .schedule-timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--accent), var(--primary));
+            border-radius: 3px;
+        }
+
+        .schedule-item {
+            position: relative;
+            padding-left: 3rem;
+            padding-bottom: 2rem;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .schedule-item:nth-child(1) { animation-delay: 0.1s; }
+        .schedule-item:nth-child(2) { animation-delay: 0.2s; }
+        .schedule-item:nth-child(3) { animation-delay: 0.3s; }
+        .schedule-item:nth-child(4) { animation-delay: 0.4s; }
+        .schedule-item:nth-child(5) { animation-delay: 0.5s; }
+        .schedule-item:nth-child(6) { animation-delay: 0.6s; }
+        .schedule-item:nth-child(7) { animation-delay: 0.7s; }
+        .schedule-item:nth-child(8) { animation-delay: 0.8s; }
+
+        @keyframes slideIn {
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .schedule-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 5px;
+            width: 15px;
+            height: 15px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px var(--accent);
+        }
+
+        .schedule-item.break::before {
+            background: var(--text-light);
+            box-shadow: 0 0 0 3px var(--text-light);
+        }
+
+        .schedule-time {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .schedule-item.break .schedule-time {
+            background: var(--text-light);
+        }
+
+        .schedule-title {
+            font-size: 1.15rem;
+            color: var(--text-dark);
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .schedule-speaker {
+            color: var(--accent-dark);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Speakers Section */
+        #speakers {
+            background: var(--bg-light);
+        }
+
+        .speakers-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2.5rem;
+        }
+
+        .speaker-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .speaker-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent), var(--primary));
+        }
+
+        .speaker-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+        }
+
+        .speaker-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .speaker-photo {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--bg-light);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+
+        .speaker-card:hover .speaker-photo {
+            transform: scale(1.05);
+        }
+
+        .speaker-info h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .speaker-info .affiliation {
+            color: var(--accent-dark);
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .speaker-info .email {
+            color: var(--text-light);
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .speaker-info .email:hover {
+            color: var(--accent);
+        }
+
+        .speaker-bio {
+            color: var(--text-light);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin-bottom: 1.5rem;
+        }
+
+        .publications-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .publications-title svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--accent);
+        }
+
+        .publications-list {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-light);
+        }
+
+        .publications-list li {
+            padding: 0.4rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .publications-list li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        /* Footer */
+        footer {
+            background: var(--bg-dark);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        footer p {
+            opacity: 0.7;
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 968px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero-overview {
+                grid-template-columns: 1fr;
+            }
+
+            .speakers-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .speakers-preview {
+                gap: 1.5rem;
+            }
+
+            .speaker-preview img {
+                width: 70px;
+                height: 70px;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .hero {
+                padding: 5rem 1.5rem 3rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero h2 {
+                font-size: 1.2rem;
+            }
+
+            .hero-meta {
+                gap: 1rem;
+            }
+
+            .hero-meta-item {
+                font-size: 0.9rem;
+            }
+
+            section {
+                padding: 3.5rem 1.5rem;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .speaker-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .speakers-preview {
+                gap: 1rem;
+            }
+
+            .speaker-preview img {
+                width: 60px;
+                height: 60px;
+            }
+
+            .speaker-preview .name {
+                font-size: 0.85rem;
+            }
+
+            .speaker-preview .org {
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Intersection Observer Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-logo">ASRU <span>2025</span> Tutorial</a>
+            <ul class="nav-links">
+                <li><a href="#schedule">Schedule</a></li>
+                <li><a href="#speakers">Speakers</a></li>
+                <li><a href="https://2025.ieeeasru.org/" target="_blank">ASRU 2025</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section with Overview -->
+    <section class="hero" id="overview">
+        <div class="hero-container">
+            <div class="hero-header">
+                <div class="hero-badge">IEEE ASRU 2025 Tutorial</div>
+                <h1>Multimodal Speech Modeling</h1>
+                <h2>From Understanding to Generation</h2>
+                <div class="hero-meta">
+                    <div class="hero-meta-item">
+                        <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm-8 4H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+                        <span>December 6-10, 2025</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                        <span>9:00 AM – 12:00 PM</span>
+                    </div>
+                    <div class="hero-meta-item">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                        <span>Honolulu, Hawaii</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Speaker Preview -->
+            <div class="speakers-preview">
+                <a href="#speakers" class="speaker-preview">
+                    <img src="david.jpeg" alt="Dr. David M. Chan">
+                    <div class="name">David M. Chan</div>
+                    <div class="org">UC Berkeley</div>
+                </a>
+                <a href="#speakers" class="speaker-preview">
+                    <img src="huck.jpg" alt="Dr. Huck Yang">
+                    <div class="name">Huck Yang</div>
+                    <div class="org">NVIDIA</div>
+                </a>
+                <a href="#speakers" class="speaker-preview">
+                    <img src="xudongwang.png" alt="Dr. Xudong Wang">
+                    <div class="name">Xudong Wang</div>
+                    <div class="org">Meta</div>
+                </a>
+                <a href="#speakers" class="speaker-preview">
+                    <img src="apoorv.jpeg" alt="Dr. Apoorv Vyas">
+                    <div class="name">Apoorv Vyas</div>
+                    <div class="org">Meta FAIR</div>
+                </a>
+            </div>
+
+            <!-- Overview Content -->
+            <div class="hero-overview">
+                <div class="overview-text">
+                    <p>This tutorial provides a detailed journey through <strong>multimodal speech modeling</strong>, organized into three parts: <strong>(1) Understanding</strong>, <strong>(2) Generation</strong>, and <strong>(3) Real-Time/Interactive Systems</strong>.</p>
+                    <p>We begin by reviewing how traditional speech processing has evolved with the advent of foundation models and audio-visual learning, and then delve into cutting-edge research that bridges audio, language, and visual modalities.</p>
+                    <p>The goal is to equip participants with both the conceptual frameworks and technical know-how to understand current audio-visual foundation models and to inspire new research directions at the nexus of speech and multimodality.</p>
+                </div>
+                <div class="overview-highlights">
+                    <div class="highlight-card">
+                        <h4>Part 1: Understanding</h4>
+                        <p>Generative perspective of multimodal speech understanding with LMs</p>
+                    </div>
+                    <div class="highlight-card">
+                        <h4>Part 2: Generation</h4>
+                        <p>Visual generation toward VideoGen & Multimodal conditional AudioGen</p>
+                    </div>
+                    <div class="highlight-card">
+                        <h4>Part 3: Interactive Systems</h4>
+                        <p>Assistive AI with joint generation and understanding capabilities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Schedule Section -->
+    <section id="schedule">
+        <div class="container">
+            <div class="section-header">
+                <h2>Schedule</h2>
+                <p>A comprehensive half-day tutorial covering the latest advances</p>
+            </div>
+            <div class="schedule-timeline">
+                <div class="schedule-item">
+                    <span class="schedule-time">9:00 – 9:05</span>
+                    <div class="schedule-title">Opening</div>
+                    <div class="schedule-speaker">David M. Chan, UC Berkeley</div>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-time">9:05 – 9:40</span>
+                    <div class="schedule-title">A Generative Perspective of Multimodal Speech Understanding with LMs</div>
+                    <div class="schedule-speaker">Huck Yang, NVIDIA</div>
+                </div>
+                <div class="schedule-item break">
+                    <span class="schedule-time">9:40 – 9:50</span>
+                    <div class="schedule-title">Q&A for Section 1</div>
+                    <div class="schedule-speaker">Interactive Discussion</div>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-time">9:50 – 10:20</span>
+                    <div class="schedule-title">Visual Generation toward VideoGen</div>
+                    <div class="schedule-speaker">Xudong Wang, Meta</div>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-time">10:20 – 10:55</span>
+                    <div class="schedule-title">Multimodal and Conditional AudioGen</div>
+                    <div class="schedule-speaker">Apoorv Vyas, Meta</div>
+                </div>
+                <div class="schedule-item break">
+                    <span class="schedule-time">10:55 – 11:10</span>
+                    <div class="schedule-title">Joint Q&A for Section 2</div>
+                    <div class="schedule-speaker">Interactive Discussion</div>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-time">11:10 – 11:50</span>
+                    <div class="schedule-title">Assistive AI with Joint Generation and Understanding</div>
+                    <div class="schedule-speaker">David M. Chan, UC Berkeley</div>
+                </div>
+                <div class="schedule-item">
+                    <span class="schedule-time">11:50 – 12:00</span>
+                    <div class="schedule-title">Q&A + Closing</div>
+                    <div class="schedule-speaker">David M. Chan, UC Berkeley</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Speakers Section -->
+    <section id="speakers">
+        <div class="container">
+            <div class="section-header">
+                <h2>Speakers</h2>
+                <p>World-class researchers from leading institutions</p>
+            </div>
+            <div class="speakers-grid">
+                <!-- David M. Chan -->
+                <div class="speaker-card fade-in">
+                    <div class="speaker-header">
+                        <img src="david.jpeg" alt="Dr. David M. Chan" class="speaker-photo">
+                        <div class="speaker-info">
+                            <h3>Dr. David M. Chan</h3>
+                            <div class="affiliation">UC Berkeley</div>
+                            <a href="mailto:davidchan@berkeley.edu" class="email">davidchan@berkeley.edu</a>
+                        </div>
+                    </div>
+                    <p class="speaker-bio">
+                        David M. Chan, Ph.D., is a postdoctoral scholar at the University of California, Berkeley, specializing in multimodal learning, human-computer interaction, and generative AI, including large language models (LLMs) and foundational models. His research focuses on developing efficient and scalable methods for integrating vision, audio, and language models, improving AI-human collaboration (i.e., Video Dubbing), and mitigating hallucination in generative AI systems. In industry, he has worked with leading organizations including Amazon, Google and NASA. He is also the maintainer of TSNE-CUDA, an open-source GPU-accelerated tool for high-dimensional data visualization used by over 40,000 researchers. He holds both a PhD and MS in Computer Science from UC Berkeley and dual BSc degrees in Computer Science and Mathematics from the University of Denver.
+                    </p>
+                    <div class="publications-title">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        Related Publications
+                    </div>
+                    <ul class="publications-list">
+                        <li>Multi-Modal Pre-Training for Automated Speech Recognition, ICASSP 2022</li>
+                        <li>Clair: Evaluating Image Captions with Large Language Models, EMNLP 2023</li>
+                        <li>Multimodal Attention Merging for Improved Speech Recognition, ICASSP 2024</li>
+                        <li>ANIM-400K: Large-Scale Dataset for Automated End-To-End Dubbing, ICASSP 2024</li>
+                    </ul>
+                </div>
+
+                <!-- Huck Yang -->
+                <div class="speaker-card fade-in">
+                    <div class="speaker-header">
+                        <img src="huck.jpg" alt="Dr. Huck Yang" class="speaker-photo">
+                        <div class="speaker-info">
+                            <h3>Dr. Huck Yang</h3>
+                            <div class="affiliation">NVIDIA Research</div>
+                            <a href="mailto:hucky@nvidia.com" class="email">hucky@nvidia.com</a>
+                        </div>
+                    </div>
+                    <p class="speaker-bio">
+                        Dr. Huck Yang is a Sr. Research Scientist at NVIDIA Research working on robust speech recognition and its connections to large-scale multimodal models. Prior to joining NVIDIA, he was a scientist at Amazon Alexa ASR-LM and a research intern at Google Brain. His research focuses on speech–language alignment, large-scale multilingual speech modeling, and adapting LLMs for speech processing tasks. Dr. Yang developed the first cross-modal acoustic alignment techniques [ICML 2021] to integrate temporal signals into LLMs. He obtained his Ph.D. and M.Sc. from Georgia Institute of Technology under Prof. Chin-Hui Lee and B.Sc from National Taiwan University. He has served in the Technical Committee in Applied Signal Processing Systems of IEEE SPS since 2022 and received a Best Student Paper Award Nomination at Interspeech 2023.
+                    </p>
+                    <div class="publications-title">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        Related Publications
+                    </div>
+                    <ul class="publications-list">
+                        <li>Test-Time Alignment for Large Language Models via Textual Model Predictive Control, ArXiv 2025</li>
+                        <li>OmniVinci: Enhancing Architecture and Data for Omni-Modal Understanding LLM, NVIDIA Tech Report</li>
+                        <li>Audio Flamingo 3: Fully Open Large Audio Language Models, NeurIPS 2025 Spotlight</li>
+                        <li>NeKo: Cross-Modal Generative Correction LLMs, ACL 2025 (oral)</li>
+                        <li>OWLS: Scaling Laws for Multilingual Speech Models, ICML 2025</li>
+                    </ul>
+                </div>
+
+                <!-- Xudong Wang -->
+                <div class="speaker-card fade-in">
+                    <div class="speaker-header">
+                        <img src="xudongwang.png" alt="Dr. Xudong Wang" class="speaker-photo">
+                        <div class="speaker-info">
+                            <h3>Dr. Xudong Wang</h3>
+                            <div class="affiliation">Meta Superintelligence Labs</div>
+                            <a href="mailto:xdwang@eecs.berkeley.edu" class="email">xdwang@eecs.berkeley.edu</a>
+                        </div>
+                    </div>
+                    <p class="speaker-bio">
+                        Xudong is a Research Scientist with Meta Superintelligence Labs. He received his Ph.D. in EECS from UC Berkeley, where he was affiliated with the Berkeley AI Research (BAIR) lab under the mentorship of Prof. Trevor Darrell. Before joining BAIR, he was a staff member of the International Computer Science Institute (ICSI). He received his Master's degree in Intelligent Systems, Robotics, and Control from UC San Diego, advised by Prof. Nuno Vasconcelos. His research focuses on visual generation and multimodal learning.
+                    </p>
+                    <div class="publications-title">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        Related Publications
+                    </div>
+                    <ul class="publications-list">
+                        <li>InstanceDiffusion: Instance-level Control for Image Generation, CVPR 2024</li>
+                        <li>See, Say, and Segment: Teaching LMMs to Overcome False Premises, CVPR 2024</li>
+                        <li>Segment Anything without Supervision, NeurIPS 2024</li>
+                        <li>Visual Lexicon: Rich Image Features in Language Space, CVPR 2025</li>
+                    </ul>
+                </div>
+
+                <!-- Apoorv Vyas -->
+                <div class="speaker-card fade-in">
+                    <div class="speaker-header">
+                        <img src="apoorv.jpeg" alt="Dr. Apoorv Vyas" class="speaker-photo">
+                        <div class="speaker-info">
+                            <h3>Dr. Apoorv Vyas</h3>
+                            <div class="affiliation">Meta FAIR</div>
+                            <a href="mailto:apoorvvyas@meta.com" class="email">apoorvvyas@meta.com</a>
+                        </div>
+                    </div>
+                    <p class="speaker-bio">
+                        Dr. Apoorv Vyas is a Research Scientist at Meta's Fundamental AI Research (FAIR) team, specializing in audio generation and multimodal learning. He earned his Ph.D. in Electrical Engineering from École Polytechnique Fédérale de Lausanne (EPFL), where he focused on improving speech recognition for low-resource languages through unsupervised learning. His research interests span deep learning, automatic speech recognition, audio generation, and computer vision. Prior to his doctoral studies, Apoorv gained industry experience at Intel as a System Engineer and at Oracle as an Applications Engineer. He holds a Bachelor's degree in Electronics and Electrical Engineering from the Indian Institute of Technology, Guwahati. At Meta, he has contributed to groundbreaking work on audio generation models including AudioCraft and multimodal conditional generation systems.
+                    </p>
+                    <div class="publications-title">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                        Related Publications
+                    </div>
+                    <ul class="publications-list">
+                        <li>AudioCraft: A Library for Audio Processing and Generation with Deep Learning</li>
+                        <li>MusicGen: Simple and Controllable Music Generation, NeurIPS 2023</li>
+                        <li>SoundStorm: Efficient Parallel Audio Generation</li>
+                        <li>Multimodal Conditional Audio Generation with Transformers</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>© 2025 ASRU Tutorial: Multimodal Speech Modeling | <a href="https://2025.ieeeasru.org/" target="_blank">IEEE ASRU 2025</a></p>
+            <p style="margin-top: 0.5rem; font-size: 0.85rem;">Hyatt Regency Waikiki Beach Resort and Spa, Honolulu, Hawaii, USA</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript for animations and interactions -->
+    <script>
+        // Navbar scroll effect
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 50) {
+                navbar.classList.add('scrolled');
+            } else {
+                navbar.classList.remove('scrolled');
+            }
+        });
+
+        // Intersection Observer for fade-in animations
+        const observerOptions = {
+            root: null,
+            rootMargin: '0px',
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
